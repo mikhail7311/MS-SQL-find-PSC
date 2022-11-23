@@ -118,6 +118,7 @@ GROUP BY S_PRISCODE
 
 Set @count = ( Select count (S_PRISCODE) FROM #PSC_MINDIST)
 -- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+-- 3. Выбор PSC из #PSC_MINDIST с максимальным расстоянием от @oFWC_NAME
 IF @count < 512 -- если в #PSC_MINDIST присутствуют НЕ все PSC из возможных
 BEGIN
 	SET @SCR_CODE = 0
@@ -139,9 +140,10 @@ BEGIN
 		)
 END
 -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
--- ** удаляю таблицу с PSC и расстояниями от @oFWC_NAME до ближайшего сектора с таким же PSC
+-- 4. подходящий PSC сохранен в @SCR_CODE, удаляю таблицу #PSC_MINDIST с PSC и расстояниями от @oFWC_NAME до ближайшего сектора с таким же PSC
 drop table #PSC_MINDIST
--- **
+
+-- 5. Обновление данных в #tWCELL_DIST с учетом вновь подобранного PSC для выбранной соты:
 UPDATE #tWCELL_DIST
 SET F_PRISCODE = @SCR_CODE
 WHERE FWC_NAME = @oFWC_NAME
@@ -153,14 +155,14 @@ WHERE SWCNAME = @oFWC_NAME
 INSERT INTO db.W_CELL_PSC_reg
 	   VALUES (@oFWC_NAME,@SCR_CODE) 
 
--- удаляю просчитанный сектор из #regCell
+-- 6. Удаляю просчитанный сектор из #regCell
 DELETE FROM #regCell
 WHERE W_CELL = @oFWC_NAME
-
+-- возвращаюсь в начало цикла
 END --++++++++++^^^^^^^^^^++++++++++
 
 -- удаляю временные таблицы
 drop table #regCell
 drop table #tWCELL_DIST
-lab: -- 01.12.09
- drop table #BDKS
+lab: 
+drop table #BDKS
